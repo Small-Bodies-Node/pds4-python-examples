@@ -1,4 +1,4 @@
-# pds4-python
+# pds4-python-examples
 Python examples for the NASA Planetary Data System version 4 format.
 
 ## birc_example_display.py
