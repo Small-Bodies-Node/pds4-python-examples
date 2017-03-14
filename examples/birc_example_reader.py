@@ -1,61 +1,31 @@
-"""
-Example PDS4 Array_2D_Image display for BOPPS/BIRC data
-=======================================================
+"""birc --- Example PDS4 Array_2D_Image reader for BOPPS/BIRC data
+===============================================================
 
-This document describes an example Python module that can read an
-image from a PDS4 data product.  The code will read the data based on
-the label keywords, but does not otherwise validate the label.  If the
-user wants to display the image, the code will consider the label's
-Display_Settings, and draw the image in the correct orientation.  The
-code is designed for reading BOPPS BIRC images, but might be useful as
-an example for similar data, i.e., there is no BIRC specific code.
+This example is described at:
+
+http://borrelly.astro.umd.edu/wiki/Example_Python_Reader_for_PDS4_Images
+
 
 Requirements
 ------------
 
-* Python 2.7+
-* numpy
-* matplotlib
-* BIRC data from the PDS archive, e.g., https://pdssbn.astro.umd.edu/holdings/pds4-bopps2014:scoadded-v1.0/SUPPORT/dataset.html
+This example assumes the user is running Python 2.7, with a recent
+NumPy package installed. The visualization example uses matplotlib.
 
 
 Example
 -------
 
-Download jaha_0_5_0349_s_0491 (xml and fit) from the
-shift/c2014e2/fw5/ directory in the BIRC Shifted and Coadded images
-archive.
+import birc_example_reader as birc
+import matplotlib.pyplot as plt
 
-Run this script from the command line:
+# array is im.data
+# array for displaying is im.display_data
+im = birc.read_image('cerh2_1_010000_rb_n169_n011.xml')
 
-  python birc_example_display.py jaha_0_5_0349_s_0491.xml
-
-or, use the following code:
-
-  import birc_example_display as birc
-  import matplotlib.pyplot as plt
-
-  plt.clf()
-  im = birc.read_image('jaha_0_5_0349_s_0491.xml')
-  im.show(cmap='gray')
-  plt.draw()
-  plt.show()
-
-
-Goals and Methods
------------------
-
-The goal is to read in an image from a BOPPS BIRC data product into a
-Numpy array, providing the correct orientation for display.  We will
-provide a function with the name of the label, the function will then
-
-  * Open the label.
-  * Find the data product file name.
-  * Determine the Array_2D_Image data type and shape.
-  * Read in the data array.
-  * Return the array and meta data in a single object.
-  * The object will have one attribute that allow access to the data,
-    and one method that will display the data.
+plt.clf()
+plt.imshow(im.display_data, origin='lower')
+plt.draw()
 
 
 Classes
@@ -71,6 +41,7 @@ read_pds4_array - Read a PDS4 data array.
 """
 
 import numpy as np
+import xml.etree.ElementTree as ET
 
 class PDS4_Array_2D_Image(object):
     """A PDS4 array for 2D images, with limited functionality.
@@ -137,8 +108,8 @@ class PDS4_Array_2D_Image(object):
         xpath = ('./pds4:Observation_Area/pds4:Discipline_Area/'
                  'disp:Display_Settings')
         for e in self.label.findall(xpath, ns):
-            lir = e.find('./pds4:Local_Internal_Reference', ns)
-            reference = lir.find('./pds4:local_identifier_reference', ns).text.strip()
+            lir = e.find('./disp:Local_Internal_Reference', ns)
+            reference = lir.find('./disp:local_identifier_reference', ns).text.strip()
             if reference == self.local_identifier:
                 display_settings = e
                 break
@@ -164,32 +135,15 @@ class PDS4_Array_2D_Image(object):
                 sn = int(axis.find('./pds4:sequence_number', ns).text.strip())
                 self.vertical_axis = sn - 1
 
-    def show(self, **kwargs):
-        """Display this image with the correct orientation.
-
-        Parameters
-        ----------
-        **kwargs
-          Any maplotlib imshow keyword argument except `origin`.
-
-        Returns
-        -------
-        image : matplotlib.image.AxesImage
-
-        """
-
-        import matplotlib.pyplot as plt
-
-        assert 'origin' not in kwargs, "origin keyword not allowed."
-        
+    @property
+    def display_data(self):
         # only need to roll one axis for a 2D image
         im = np.rollaxis(self.data, self.vertical_axis)
         if 'Right to Left' in self.display_directions:
             im = im[:, ::-1]
         if 'Top to Bottom' in self.display_directions:
             im = im[::-1]
-
-        return plt.imshow(im, origin='lower', **kwargs)
+        return im
 
 def read_image(file_name):
     """Read a BIRC image described by a PDS4 label file.
@@ -212,9 +166,7 @@ def read_image(file_name):
     NotImplementedError
 
     """
-
     import os
-    import xml.etree.ElementTree as ET
 
     # namespace definitions
     ns = {'pds4': 'http://pds.nasa.gov/pds4/pds/v1'}
@@ -261,7 +213,6 @@ def read_pds4_array(file_area, xpath, ns, dirname=''):
     Raises
     ------
     NotImplementedError
-      When there are multiple Array_2D_Image elements in the label.
 
     """
 
@@ -302,17 +253,3 @@ def read_pds4_array(file_area, xpath, ns, dirname=''):
         data = np.fromfile(inf, dtype, count=np.prod(shape)).reshape(shape)
 
     return data, local_identifier
-
-if __name__ == '__main__':
-    import argparse
-    import matplotlib.pyplot as plt
-
-    parser = argparse.ArgumentParser(description='Display a BIRC image with correct orientation.')
-    parser.add_argument('label', help='PDS4 label to the image of interest.')
-    args = parser.parse_args()
-    
-    plt.clf()
-    im = read_image(args.label)
-    im.show(cmap='gray')
-    plt.draw()
-    plt.show()
