@@ -62,6 +62,8 @@ target/
 # auto-downloaded data in Jupyter noteboots
 notebooks/*.tab
 notebooks/*.xml
+notebooks/*.fit
+notebooks/*.fits
 
 # notebook checkpoints
 notebooks/.ipynb_checkpoints
