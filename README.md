@@ -1,5 +1,13 @@
 # pds4-python-examples
-Python examples for the NASA Planetary Data System version 4 format.
+Task-oriented Python-based examples for working with NASA Planetary Data System version 4 archive data.
+
+## Requirements
+The software requirements vary by example.  At a minimum, an up to date Python distribution is needed, v2.7 is probably OK, but v3.5 or latter is recommended.  Some examples require one or more of the following:
+* [`pds4_tools`](http://sbndev.astro.umd.edu/wiki/Python_PDS4_Tools), our Python module for reading and inspecting PDS4 data and meta data;
+* [`numpy`](http://www.numpy.org/), an efficient library for arrays, linear algebra, and many basic mathematical functions; and
+* [`matplotlib`](http://www.matplotlib.org/) for plotting data.
+
+Most examples are written as [Jupyter notebooks](http://jupyter.org).  These may be downloaded, edited, and executed on your own system.  As an alternative, you can copy and paste the Python code onto your command line or into your own scripts.
 
 ## Examples using `pds4_tools`
 The following examples use the [`pds4_tools`](http://sbndev.astro.umd.edu/wiki/Python_PDS4_Tools) Python module.
